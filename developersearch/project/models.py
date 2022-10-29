@@ -6,8 +6,10 @@ from turtle import title
 from unittest.util import _MAX_LENGTH
 from django.db import models
 import uuid
+from users.models import Profile
 
 class Project(models.Model):
+    owner = models.ForeignKey(Profile, null=True, blank=True, on_delete=models.SET_NULL)
     id = models.UUIDField(default=uuid.uuid4, unique=True, primary_key=True, editable=False)
     title = models.CharField(max_length=200)
     desciption = models.TextField(null=True, blank=True)
