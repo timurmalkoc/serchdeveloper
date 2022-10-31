@@ -22,5 +22,5 @@ def deleteUser(sender, instance, **kwargs):
     user.delete()
 
 # conneting signals one way and another is decorators
-post_save.connet(createProfile, sender=User)
-post_delete.connet(deleteUser, sender=Profile)
+post_save.connect(createProfile, sender=User)
+post_delete.connect(deleteUser, sender=Profile)

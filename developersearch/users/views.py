@@ -7,3 +7,6 @@ def profiles(request):
 
 def userProfile(request):
     pass
+
+def loginPage(request):
+    pass
