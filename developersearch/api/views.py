@@ -58,16 +58,52 @@ def getProjects(request):
                     return Response(status=status.HTTP_201_CREATED)
             except KeyError:
                 return Response({"error":"Missing requirement"}, status=status.HTTP_400_BAD_REQUEST)
-            
+        else:
+            return Response({"error":"You are not authoried"}, status=status.HTTP_401_UNAUTHORIZED)
+    else:
         return Response({"error":"Invalid method"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-@api_view(['GET', 'DELETE'])
+@api_view(['GET', 'PUT', 'DELETE'])
 def getProject(request, pk):
-    project = Project.objects.get(id=pk)
-    serializer = ProjectSerializer(project, many=False)
-    return Response(serializer.data)
+    # View projects
+    if request.method == 'GET':
+        project = Project.objects.get(id=pk)
+        serializer = ProjectSerializer(project, many=False)
+        return Response(serializer.data)
 
-    
+    # Update a project
+    elif request.method == 'PUT':
+        if IsAuthenticated:
+            user = request.user.profile
+            data = request.data               
+            project = user.project_set.filter(id=pk).first()
+            if project == None:
+                return Response({"error":"You are not authorized"}, status=status.HTTP_401_UNAUTHORIZED)    
+
+            project.update(data.get('project'))
+
+            project.save()
+            for tag in data.get('tags'):
+                
+                tag, created = Tag.objects.get_or_create(name=tag)
+                project.tags.add(tag)
+
+            return Response(status=status.HTTP_201_CREATED)
+        else:
+            return Response({"error":"You are not authorized"}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+    # Delete a project
+    elif request.method == 'DELETE':
+        if IsAuthenticated:
+            user = request.user.profile
+            project = user.project_set.filter(id=pk).first()
+            if project == None:
+                return Response({"error":"You are not authorized"}, status=status.HTTP_401_UNAUTHORIZED)
+            project.delete()
+            return Response(status=status.HTTP_202_ACCEPTED)
+    else:
+        return Response({"error":"Invalid method"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -100,3 +136,4 @@ def removeTag(request):
     project.tags.remove(tag)
 
     return Response('Tag was deleted!')
+

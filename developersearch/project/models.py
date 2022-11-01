@@ -44,6 +44,11 @@ class Project(models.Model):
         self.vote_ratio = ratio
         self.save()
 
+    def update(self, data):
+        for field in data:
+            setattr(self, field, data[field])
+        
+
 class Review(models.Model):
     VOTE_TYPE = (
         ('up', 'Up Vote'),
