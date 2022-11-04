@@ -1,7 +1,7 @@
-from dataclasses import fields
 from rest_framework import serializers
 from project.models import Project, Tag, Review
 from users.models import Profile
+from django.contrib.auth.models import User
 
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
@@ -32,3 +32,26 @@ class ProjectSerializer(serializers.ModelSerializer):
         reviews = obj.review_set.all()
         serializer = ReviewSerializer(reviews, many=True)
         return serializer.data
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['email', 'username', 'password']
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def create(validated_data):
+        user = User.objects.create_user(
+            email=validated_data['email'],
+            username=validated_data['username']
+        )
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
+
+
+    def update(self, instance, validated_data):
+        instance.first_name = validated_data.get('first_name', instance.first_name)
+        instance.email = validated_data.get('email', instance.email)
+        instance.username = validated_data.get('username', instance.username)
+        instance.password = validated_data.get('password', instance.password)
+        return instance

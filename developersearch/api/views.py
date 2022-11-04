@@ -1,30 +1,43 @@
-from time import process_time_ns
-from unicodedata import name
-from urllib import response
-from pkg_resources import require
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
-from .serializers import ProjectSerializer
+from .serializers import ProjectSerializer, UserSerializer
 from project.models import Project, Review, Tag
-
+from django.contrib.auth.models import User
 
 @api_view(['GET'])
 def getRoutes(request):
     routes = [
+        
         {'GET': '/api/projects'},
         {'POST': '/api/projects'},
         {'GET': '/api/projects/id'},
+        {'PUT': '/api/projects/id'},
         {'DELETE': '/api/projects/id'},
         {'GET': '/api/projects/id/vote'},
 
+        {'POST': '/api/users/'},
         {'POST': '/api/users/token/'},
         {'POST': '/api/users/token/refresh/'},
     ]
 
     return Response(routes)
+
+# ============================ User api ==================================== #
+@api_view(['POST'])
+def createUser(request):
+    data = request.data
+    if data.get('username') == None or data.get('password') == None:
+        return Response({'error':'Missig field'}, status=status.HTTP_400_BAD_REQUEST)
+    if User.objects.filter(username = data['username'].lower()).first():
+        return Response({'error':'User exist or taken'}, status=status.HTTP_400_BAD_REQUEST)
+    user = UserSerializer.create({'email':data['email'], 'username':data['username'], 'password':data['password']})
+    user.username = user.username.lower()
+    user.save()
+    return Response(status.HTTP_201_CREATED)
+
 
 
 # ============================ Project api ================================= #
